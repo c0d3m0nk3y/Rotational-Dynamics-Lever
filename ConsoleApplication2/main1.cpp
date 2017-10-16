@@ -3,6 +3,7 @@
 #include <vector>
 #include <time.h>
 #include "glut.h"
+#include "GameObject.h"
 
 using namespace std;
 
@@ -22,14 +23,6 @@ bool physicsMode = false;
 int width = 900;
 int height = 900;
 
-struct Line
-{
-	float velocityX, velocityY;
-	double startX, startY;
-	double endX, endY;
-	unsigned char r, g, b, a;
-};
-
 struct Point
 {
 	double pointRadius = 1;
@@ -39,9 +32,9 @@ struct Point
 	unsigned char r, g, b, a;
 };
 
-vector<Line> line;
 vector<Point> point;
 vector<Point> fulcrum;
+vector<GameObject> gameObjects;
 
 double getStep()
 {
@@ -52,18 +45,11 @@ double getStep()
 
 void lineFunction(double startX, double startY, double endX, double endY)
 {
-
-	for (size_t i = 0; i < lineCount; i++)
-	{
-		Line ln;
-		ln.startX = startX;
-		ln.startY = startY;
-		ln.endX = endX;
-		ln.endY = endY;
-		line.push_back(ln);
-	}
-
-	cout << "line x= " << startX << "line y = " << startY << endl;
+	GameObject go = GameObject(startX, startY, 0, 1, 0, 0, GameObject::TYPE_LINE);
+	go.lx = endX;
+	go.ly = endY;
+	go.lz = 0;
+	gameObjects.push_back(go);
 }
 
 void circleFulcrum(double x, double y)
@@ -84,11 +70,8 @@ void circleFulcrum(double x, double y)
 
 void forceRotate()
 {
-	glTranslated(fulcrum[0].x, fulcrum[0].y, 0);
 	glRotated(angle, 0, 0, 1);
-	//cout << "torque = " << angle << endl;
-
-	glTranslated(-fulcrum[0].x, -fulcrum[0].y, 0);
+	glTranslated(-fulcrum[0].x, -fulcrum[0].y, 0); // center cam on fulcrum
 
 
 	//gluproject reference
@@ -122,7 +105,7 @@ void forceRotate()
 	angle += angularVel;
 	angularVel *= .999;
 
-	cout << "point[0].mass = " << point[0].mass << endl;
+	// cout << "point[0].mass = " << point[0].mass << endl;
 	//cout << "torque = " << torque << endl;
 	//cout << "angular velocity = " << angularVel << endl;
 	//cout << "angle = " << angle << endl;
@@ -144,16 +127,17 @@ void circleLoad(double m, double x, double y, double z, double r, double b, doub
 
 void drawLine()
 {
-	for (size_t i = 0; i < lineCount; i++)
-	{
-		glLineWidth(5);
-		glColor3f(1.0, 0.0, 0.0);
+	for(size_t i = 0; i < gameObjects.size(); i++) {
+		if(gameObjects[i].type == GameObject::TYPE_LINE) {
+			GameObject go = gameObjects[i];
 
-		glBegin(GL_LINES);
-		glVertex3d(line[i].startX, line[i].startY, 0.0);
-		glVertex3d(line[i].endX, line[i].endY, 0.0);
-
-		glEnd();
+			glLineWidth(5);
+			glColor3f(go.r, go.g, go.b);
+			glBegin(GL_LINES);
+			glVertex3d(go.x, go.y, go.z);
+			glVertex3d(go.lx, go.ly, go.lz);
+			glEnd();
+		}
 	}
 }
 
@@ -196,13 +180,11 @@ void keyboardFunc(unsigned char key, int xL, int xR)
 	if (key == 'a')
 	{
 		fulcrum[0].x -= getStep();
-		point[2].x -= getStep();
 		cout << "fulcrum position = " << fulcrum[0].x << endl;
 	}
 	if (key == 'd')
 	{
 		fulcrum[0].x += getStep();
-		point[2].x += getStep();
 		cout << "fulcrum position = " << fulcrum[0].x << endl;
 	}
 
@@ -239,7 +221,10 @@ void keyboardFunc(unsigned char key, int xL, int xR)
 	}
 
 	if ('w' == key)
+	{
 		forceLoadDirection = !forceLoadDirection;
+		cout << "load direction " << forceLoadDirection << endl;
+	}
 
 	if (key == 'x')
 	{
@@ -259,13 +244,11 @@ void keyboardFunc(unsigned char key, int xL, int xR)
 
 	if (fulcrum[0].x >= 50)
 	{
-		point[2].x = -50;
 		fulcrum[0].x = -50;
 	}
 
 	if (fulcrum[0].x < -50)
 	{
-		point[2].x = 50;
 		fulcrum[0].x = 50;
 	}
 
@@ -325,9 +308,8 @@ int main(int argc, char **argv)
 	glutKeyboardFunc(keyboardFunc);
 
 	circleFulcrum(0.0, 0.0);
-	circleLoad(0,20.0, 0.0, -1.0, 1, 1, 0);
+	circleLoad(500.0, 20.0, 0.0, -1.0, 1, 1, 0);
 	circleLoad(10.0, -20.0, 0.0, -1.0, 0, 0, 1);
-	circleLoad(2.0, 0.0, 0.0, -1.0, 0, 1, 0);
 
 	cout <<"force mass = "<< point[0].mass << endl;
 	cout << "load mass = " << point[1].mass << endl;
