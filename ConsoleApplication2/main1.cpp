@@ -5,8 +5,11 @@
 #include "glut.h"
 
 using namespace std;
-double step=0.1;
-int rate=1;
+const int STEP_LG = 100;
+const int STEP_MD = 10;
+const int STEP_SM = 1;
+const int STEP_DIV = 1000;
+int step = STEP_LG;
 bool forceLoadDirection = true;
 int pointCount = 2;
 int lineCount = 1;
@@ -36,13 +39,19 @@ struct Point
 	unsigned char r, g, b, a;
 };
 
-//a vector of Line structs called line which stores the information 
+//a vector of Line structs called line which stores the information
 vector<Line> line;
-//a vector of Point structs called points which stores the information 
+//a vector of Point structs called points which stores the information
 vector<Point> point;
-//a vector of Point structs called fulcrum which stores the information 
+//a vector of Point structs called fulcrum which stores the information
 vector<Point> fulcrum;
 
+double getStep()
+{
+	double wut = (double)step / (double)STEP_DIV;
+	cout << wut << "\n";
+	return wut;
+}
 
 //does the distance calculation needed to detect collision(not used at all currently)
 double distanceCalculate(double x1, double y1, double x2, double y2)
@@ -50,10 +59,10 @@ double distanceCalculate(double x1, double y1, double x2, double y2)
 	double x = x1 - x2; //calculating number to square in next step
 	double y = y1 - y2;
 	double distance;
-	
+
 	distance = (x1 - x2)*(x1 - x2) + (y1 - y2)*(y1 - y2);       //calculating Euclidean distance
 	distance = sqrt(distance);
-	
+
 	cout << distance << endl;
 	return distance;
 }
@@ -61,7 +70,7 @@ double distanceCalculate(double x1, double y1, double x2, double y2)
 
 void lineFunction(double startX, double startY, double endX, double endY)
 {
-	
+
 	for (size_t i = 0; i < lineCount; i++)
 	{
 		Line ln;
@@ -71,7 +80,7 @@ void lineFunction(double startX, double startY, double endX, double endY)
 		ln.endY = endY;
 		line.push_back(ln);
 	}
-	
+
 	cout << "line x= " << startX << "line y = " << startY << endl;
 }
 void circleFulcrum(double x, double y)
@@ -84,7 +93,7 @@ void circleFulcrum(double x, double y)
 		fm.y = y;
 		fulcrum.push_back(fm);
 	}
-	
+
 	cout << "fulcrum x = " << x << " fulcrum y = " << y << endl;
 }
 
@@ -93,15 +102,15 @@ void forceRotate()
 	glTranslated(fulcrum[0].x, fulcrum[0].y, 0);
 	glRotated(angle, 0, 0, 1);
 	//cout << "torque = " << angle << endl;
-	
+
 	glTranslated(-fulcrum[0].x, -fulcrum[0].y, 0);
-	
+
 
 	//gluproject reference
-	//http://stackoverflow.com/questions/11891481/gluproject-setup-in-opengl-vc-beginner 
+	//http://stackoverflow.com/questions/11891481/gluproject-setup-in-opengl-vc-beginner
 	GLdouble lx, ly, lz; // target 2d coords (z is 'unused')
 	GLdouble fx, fy, fz;
-	
+
 	GLdouble model_view[16];
 	glGetDoublev(GL_MODELVIEW_MATRIX, model_view);
 
@@ -110,22 +119,22 @@ void forceRotate()
 
 	GLint viewport[4];
 	glGetIntegerv(GL_VIEWPORT, viewport);
-	
+
 	gluProject(fulcrum[0].x, fulcrum[0].y, fulcrum[0].z, model_view, projection, viewport, &fx, &fy, &fz);
 	torque = 0;
-	
+
 	for (int i = 0; i < point.size(); i++)
 	{
 		gluProject(point[i].x, point[i].y, point[i].z, model_view, projection, viewport, &lx, &ly, &lz);
 		double distance = lx - fx;
-		
-		
+
+
 		//double distance = point[i].x - fulcrum[0].x;
-		
+
 		double force = distance*point[i].mass*.00001;
 		torque -= force;
 	}
-	
+
 	if (forceLoadDirection == true)
 	{
 		point[0].mass = point[0].mass;
@@ -134,12 +143,12 @@ void forceRotate()
 	{
 		point[0].mass = -point[0].mass;
 	}
-		
+
 		angularVel += torque;
 		angle += angularVel;
-		
+
 		angularVel *= .999;
-		
+
 		//cout << "torque = " << torque << endl;
 		//cout << "angular velocity = " << angularVel << endl;
 		//cout << "angle = " << angle << endl;
@@ -152,34 +161,34 @@ void circleLoad(double m, double x, double y,double z)
 		pt.x = x;
 		pt.y = y;
 		pt.z = z;
-		
+
 		point.push_back(pt);
-	
-	
+
+
 }
 void drawLine()
 {
-	
+
 	// draws the line/s stores in the vector
 	for (size_t i = 0; i < lineCount; i++)
 	{
-		
+
 		glLineWidth(5);
 		glColor3f(1.0, 0.0, 0.0);
-		
+
 		glBegin(GL_LINES);
 		glVertex3d(line[i].startX, line[i].startY, 0.0);
 		glVertex3d(line[i].endX, line[i].endY, 0.0);
 
 		glEnd();
 	}
-	
+
 }
 void drawforceDirection()
 {
 	//push current matrix onto the stack
 	glPushMatrix();
-	glutSolidCone(5, 5, 50, 50);
+	glutWireCone(5, 5, 50, 50);
 	glTranslated(point[0].x, point[0].y, 0);
 	glRotated(45, 0,1, 0);
 	//pop the current matrix off the stack
@@ -201,7 +210,7 @@ void drawFulcrum()
 		//generic colour provided elsewhere
 		glColor3d(fulcrum[i].r, fulcrum[i].g, fulcrum[i].b);
 		//particles of number particleCount radius = particleRadius
-		
+
 		if (staticEquilibrium>-0.01&&staticEquilibrium<0.01)
 		{
 			glColor3d(0, 1, 0);
@@ -210,7 +219,7 @@ void drawFulcrum()
 		{
 			glColor3d(1, 1, 1);
 		}
-		
+
 		glutSolidSphere(fulcrum[i].pointRadius, 50, 50);
 		//pop the current matrix off the stack
 		glPopMatrix();
@@ -230,14 +239,14 @@ void drawLoad()
 		//generic colour provided elsewhere
 		glColor3d(point[i].r, point[i].g, point[i].b);
 		//particles of number particleCount radius = particleRadius
-		
+
 		//glColor3d(point[0].r = 1, point[0].g = 1, point[0].b = 0);
 		glutSolidSphere(point[i].pointRadius, 50, 50);
 		//pop the current matrix off the stack
 		glPopMatrix();
-		
+
 	}
-	
+
 	//colour of force load
 	glColor3d(point[0].r = 1, point[0].g = 1, point[0].b = 0);
 	//colour of weight load
@@ -246,54 +255,54 @@ void drawLoad()
 
 void moveFulcrum(unsigned char key, int xL, int xR)
 {
-	
+
 	xL = fulcrum[0].x;
 	xR = fulcrum[0].y;
 	xL = point[0].x;
 	xR = point[0].y;
 	xL = point[1].x;
 	xR = point[1].y;
-	
+
 	if (key == 'a')
 	{
 
-		fulcrum[0].x -= step;
-		point[2].x -= step;
+		fulcrum[0].x -= getStep();
+		point[2].x -= getStep();
 		cout << "fulcrum position = " << fulcrum[0].x << endl;
 	}
 	if (key == 'd')
 	{
-		fulcrum[0].x += step;
-		point[2].x += step;
+		fulcrum[0].x += getStep();
+		point[2].x += getStep();
 		cout << "fulcrum position = " << fulcrum[0].x << endl;
 	}
 	if (key == 'q')
 	{
 
-		point[0].x -= step;
+		point[0].x -= getStep();
 		cout << "force position = " << fulcrum[0].x << endl;
 	}
 	if (key == 'e')
 	{
-		point[0].x += step;
+		point[0].x += getStep();
 		cout << "force position = " << fulcrum[0].x << endl;
 	}
 	if (key == 'z')
 	{
 
-		point[1].x -= step;
+		point[1].x -= getStep();
 		cout << "load position = " << fulcrum[0].x << endl;
 	}
 	if (key == 'c')
 	{
-		point[1].x += step;
+		point[1].x += getStep();
 		cout << "load position = " << fulcrum[0].x << endl;
 	}
 	if (key == 's'&&physicsMode==false)
 	{
 		cout << "physics mode true" << endl;
 		physicsMode = true;
-		
+
 	}
 	else if (key == 's'&&physicsMode == true)
 	{
@@ -301,21 +310,21 @@ void moveFulcrum(unsigned char key, int xL, int xR)
 		physicsMode = false;
 
 	}
-	if (key == 'x'&&rate == 1)
+	if (key == 'x')
 	{
-		step = step / 10;
-		rate = 2;
-
-	}
-	else if (key == 'x'&&rate == 2)
-	{
-		step=step / 10;
-		rate = 3;
-	}
-	else if (key == 'x'&&rate == 3)
-	{
-		step = step * 10;
-		rate = 1;
+		cout << "step " << step;
+		switch(step) {
+			case STEP_LG:
+				step = STEP_MD;
+				break;
+			case STEP_MD:
+				step = STEP_SM;
+				break;
+			case STEP_SM:
+				step = STEP_LG;
+				break;
+		}
+		cout << " to " << step << "\n";
 	}
 	if (key == 'w'&&forceLoadDirection == true)
 	{
@@ -325,7 +334,7 @@ void moveFulcrum(unsigned char key, int xL, int xR)
 	{
 		forceLoadDirection = true;
 	}
-	
+
 	if (fulcrum[0].x >= 50)
 	{
 		point[2].x = -50;
@@ -369,8 +378,8 @@ void changeSize(int w, int h)
 //opengl rendering stuff. updates 60 times a second(or something).
 void renderScene(void)
 {
-	
-	
+
+
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
@@ -378,26 +387,14 @@ void renderScene(void)
 	glMatrixMode(GL_MODELVIEW);
 
 	glLoadIdentity();
-	if (physicsMode == true)
-	{
-		drawFulcrum();
-
+	if(physicsMode)
 		forceRotate();
-		
-		drawLoad();
-		drawLine();
-		//drawforceDirection();
-		
-	}
-	if(physicsMode==false)
-	{
-		drawFulcrum();
-		
-	
-		drawLoad();
-		drawLine();
-		//drawforceDirection();
-	}
+
+	drawLoad();
+	drawLine();
+	drawFulcrum();
+	// drawforceDirection();
+
 	//flushes the buffer
 	glFlush();
 	//swaps between the front buffer and the back buffer
@@ -407,7 +404,7 @@ void renderScene(void)
 }
 
 //main entry point *snigger*
-int main(int argc, char **argv) 
+int main(int argc, char **argv)
 {
 	//init randomizer
 	srand(static_cast <unsigned> (time(0)));
@@ -432,16 +429,16 @@ int main(int argc, char **argv)
 	cout << "fulcrum pos = " << fulcrum[0].x << endl;
 	cout << "L = " << point[0].x - fulcrum[0].x << endl;
 	cout << "X = " << fulcrum[0].x- point[1].x << endl;
-	
-	
+
+
 	//lever
 	lineFunction(20.0, 0.0, -20.0, 0.0);
-	
+
 	// register callback functions
 	glutDisplayFunc(renderScene);
 	glutReshapeFunc(changeSize);
 	glutKeyboardFunc(moveFulcrum);
-	
+
 	// enter GLUT event processing loop
 	glutMainLoop();
 
