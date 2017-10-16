@@ -13,7 +13,7 @@ const int STEP_DIV = 1000;
 int step = STEP_LG;
 bool forceLoadDirection = true;
 int pointCount = 2;
-int lineCount = 2;
+int lineCount = 1;
 int fulcrumCount = 1;
 double torque;
 double angularVel;
@@ -35,7 +35,6 @@ struct Point
 	double pointRadius = 1;
 	double mass;
 	float velocityX, velocityY;
-	float transX, transY;
 	double x, y,z;
 	unsigned char r, g, b, a;
 };
@@ -74,6 +73,9 @@ void circleFulcrum(double x, double y)
 		Point fm;
 		fm.x = x;
 		fm.y = y;
+		fm.r = 1;
+		fm.g = 1;
+		fm.b = 0;
 		fulcrum.push_back(fm);
 	}
 
@@ -87,6 +89,7 @@ void forceRotate()
 	//cout << "torque = " << angle << endl;
 
 	glTranslated(-fulcrum[0].x, -fulcrum[0].y, 0);
+
 
 	//gluproject reference
 	//http://stackoverflow.com/questions/11891481/gluproject-setup-in-opengl-vc-beginner
@@ -117,7 +120,6 @@ void forceRotate()
 
 	angularVel += torque;
 	angle += angularVel;
-
 	angularVel *= .999;
 
 	cout << "point[0].mass = " << point[0].mass << endl;
@@ -126,13 +128,16 @@ void forceRotate()
 	//cout << "angle = " << angle << endl;
  }
 
-void circleLoad(double m, double x, double y,double z)
+void circleLoad(double m, double x, double y, double z, double r, double b, double g)
 {
 		Point pt;
 		pt.mass = m;
 		pt.x = x;
 		pt.y = y;
 		pt.z = z;
+		pt.r = r;
+		pt.g = g;
+		pt.b = b;
 
 		point.push_back(pt);
 }
@@ -172,7 +177,6 @@ void drawFulcrum()
 		glPopMatrix();
 	}
 }
-
 
 void drawLoad()
 {
@@ -321,9 +325,9 @@ int main(int argc, char **argv)
 	glutKeyboardFunc(keyboardFunc);
 
 	circleFulcrum(0.0, 0.0);
-	circleLoad(0,20.0, 0.0,-1.0);
-	circleLoad(10.0,-20.0, 0.0,-1.0);
-	circleLoad(2.0, 0.0, 0.0,-1.0);
+	circleLoad(0,20.0, 0.0, -1.0, 1, 1, 0);
+	circleLoad(10.0, -20.0, 0.0, -1.0, 0, 0, 1);
+	circleLoad(2.0, 0.0, 0.0, -1.0, 0, 1, 0);
 
 	cout <<"force mass = "<< point[0].mass << endl;
 	cout << "load mass = " << point[1].mass << endl;
