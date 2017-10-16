@@ -33,14 +33,21 @@ struct Point
 };
 
 vector<Point> point;
-vector<Point> fulcrum;
 vector<GameObject> gameObjects;
 
 double getStep()
 {
-	double wut = (double)step / (double)STEP_DIV;
-	cout << wut << "\n";
-	return wut;
+	return (double)step / (double)STEP_DIV;
+}
+
+GameObject getFulcrum() {
+	for(size_t i = 0; i < gameObjects.size(); i++) {
+		if(gameObjects[i].type == GameObject::TYPE_FULCRUM) {
+			return gameObjects[i];
+		}
+	}
+
+	throw "getFulcrum() cannot find TYPE_FULCRUM";
 }
 
 void addLine(double startX, double startY, double endX, double endY)
@@ -54,18 +61,9 @@ void addLine(double startX, double startY, double endX, double endY)
 
 void addFulcrum(double x, double y)
 {
-	for (size_t i = 0; i < fulcrumCount; i++)
-	{
-		Point fm;
-		fm.x = x;
-		fm.y = y;
-		fm.r = 1;
-		fm.g = 1;
-		fm.b = 0;
-		fulcrum.push_back(fm);
-	}
-
-	cout << "fulcrum x = " << x << " fulcrum y = " << y << endl;
+	GameObject go = GameObject(x, y, 0, 1, 1, 0, GameObject::TYPE_FULCRUM);
+	go.size = 1;
+	gameObjects.push_back(go);
 }
 
 void addCircle(double m, double x, double y, double z, double r, double b, double g)
@@ -84,8 +82,10 @@ void addCircle(double m, double x, double y, double z, double r, double b, doubl
 
 void forceRotate()
 {
+	GameObject fulcrum = getFulcrum();
+
 	glRotated(angle, 0, 0, 1);
-	glTranslated(-fulcrum[0].x, -fulcrum[0].y, 0); // center cam on fulcrum
+	glTranslated(-fulcrum.x, -fulcrum.y, 0); // center cam on fulcrum
 
 	//gluproject reference
 	//http://stackoverflow.com/questions/11891481/gluproject-setup-in-opengl-vc-beginner
@@ -101,7 +101,7 @@ void forceRotate()
 	GLint viewport[4];
 	glGetIntegerv(GL_VIEWPORT, viewport);
 
-	gluProject(fulcrum[0].x, fulcrum[0].y, fulcrum[0].z, model_view, projection, viewport, &fx, &fy, &fz);
+	gluProject(fulcrum.x, fulcrum.y, fulcrum.z, model_view, projection, viewport, &fx, &fy, &fz);
 	torque = 0;
 
 	for (int i = 0; i < point.size(); i++)
@@ -117,11 +117,6 @@ void forceRotate()
 	angularVel += torque;
 	angle += angularVel;
 	angularVel *= .999;
-
-	// cout << "point[0].mass = " << point[0].mass << endl;
-	//cout << "torque = " << torque << endl;
-	//cout << "angular velocity = " << angularVel << endl;
-	//cout << "angle = " << angle << endl;
  }
 
 void drawLine()
@@ -151,14 +146,13 @@ void drawforceDirection()
 
 void drawFulcrum()
 {
-	for (size_t i = 0; i < fulcrumCount; i++)
-	{
-		glPushMatrix();
-		glTranslated(fulcrum[i].x, fulcrum[i].y, -1);
-		glColor3d(fulcrum[i].r, fulcrum[i].g, fulcrum[i].b);
-		glutSolidSphere(fulcrum[i].pointRadius, 50, 50);
-		glPopMatrix();
-	}
+	GameObject fulcrum = getFulcrum();
+
+	glPushMatrix();
+	glTranslated(fulcrum.x, fulcrum.y, -1);
+	glColor3d(fulcrum.r, fulcrum.g, fulcrum.b);
+	glutSolidSphere(fulcrum.size, 50, 50);
+	glPopMatrix();
 }
 
 void drawLoad()
@@ -175,16 +169,18 @@ void drawLoad()
 
 void keyboardFunc(unsigned char key, int xL, int xR)
 {
+	GameObject fulcrum = getFulcrum();
+
 	// fulcrum left/right
 	if (key == 'a')
 	{
-		fulcrum[0].x -= getStep();
-		cout << "fulcrum position = " << fulcrum[0].x << endl;
+		fulcrum.x -= getStep();
+		cout << "fulcrum position = " << fulcrum.x << endl;
 	}
 	if (key == 'd')
 	{
-		fulcrum[0].x += getStep();
-		cout << "fulcrum position = " << fulcrum[0].x << endl;
+		fulcrum.x += getStep();
+		cout << "fulcrum position = " << fulcrum.x << endl;
 	}
 
 	// force left/right
@@ -241,14 +237,14 @@ void keyboardFunc(unsigned char key, int xL, int xR)
 		cout << "step " << step << "\n";
 	}
 
-	if (fulcrum[0].x >= 50)
+	if (fulcrum.x >= 50)
 	{
-		fulcrum[0].x = -50;
+		fulcrum.x = -50;
 	}
 
-	if (fulcrum[0].x < -50)
+	if (fulcrum.x < -50)
 	{
-		fulcrum[0].x = 50;
+		fulcrum.x = 50;
 	}
 
 	glutPostRedisplay();
@@ -313,9 +309,9 @@ int main(int argc, char **argv)
 
 	cout <<"force mass = "<< point[0].mass << endl;
 	cout << "load mass = " << point[1].mass << endl;
-	cout << "fulcrum pos = " << fulcrum[0].x << endl;
-	cout << "L = " << point[0].x - fulcrum[0].x << endl;
-	cout << "X = " << fulcrum[0].x- point[1].x << endl;
+	// cout << "fulcrum pos = " << fulcrum.x << endl;
+	// cout << "L = " << point[0].x - fulcrum.x << endl;
+	// cout << "X = " << fulcrum.x- point[1].x << endl;
 
 	glutMainLoop();
 

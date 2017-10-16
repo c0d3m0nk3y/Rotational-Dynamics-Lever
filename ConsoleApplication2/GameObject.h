@@ -6,8 +6,8 @@ public:
   GameObject(float x, float y, float z, float r, float g, float b, int type);
 
   static const int TYPE_LINE = 0;
-  const int TYPE_POINT = 1;
-  const int TYPE_FULCRUM = 2;
+  static const int TYPE_POINT = 1;
+  static const int TYPE_FULCRUM = 2;
 
   float velocityX, velocityY, velocityZ;
   float x, y, z;
