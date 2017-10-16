@@ -4,6 +4,7 @@
 class GameObject {
 public:
   GameObject(float x, float y, float z, float r, float g, float b, int type);
+  GameObject();
 
   static const int TYPE_LINE = 0;
   static const int TYPE_POINT = 1;

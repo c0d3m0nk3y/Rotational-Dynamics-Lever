@@ -22,6 +22,8 @@ double angle;
 bool physicsMode = false;
 int width = 900;
 int height = 900;
+vector<GameObject> gameObjects;
+GameObject fulcrum;
 
 struct Point
 {
@@ -33,21 +35,10 @@ struct Point
 };
 
 vector<Point> point;
-vector<GameObject> gameObjects;
 
 double getStep()
 {
 	return (double)step / (double)STEP_DIV;
-}
-
-GameObject getFulcrum() {
-	for(size_t i = 0; i < gameObjects.size(); i++) {
-		if(gameObjects[i].type == GameObject::TYPE_FULCRUM) {
-			return gameObjects[i];
-		}
-	}
-
-	throw "getFulcrum() cannot find TYPE_FULCRUM";
 }
 
 void addLine(double startX, double startY, double endX, double endY)
@@ -61,9 +52,9 @@ void addLine(double startX, double startY, double endX, double endY)
 
 void addFulcrum(double x, double y)
 {
-	GameObject go = GameObject(x, y, 0, 1, 1, 0, GameObject::TYPE_FULCRUM);
-	go.size = 1;
-	gameObjects.push_back(go);
+	fulcrum = GameObject(x, y, 0, 1, 1, 0, GameObject::TYPE_FULCRUM);
+	fulcrum.size = 1;
+	gameObjects.push_back(fulcrum);
 }
 
 void addCircle(double m, double x, double y, double z, double r, double b, double g)
@@ -82,8 +73,6 @@ void addCircle(double m, double x, double y, double z, double r, double b, doubl
 
 void forceRotate()
 {
-	GameObject fulcrum = getFulcrum();
-
 	glRotated(angle, 0, 0, 1);
 	glTranslated(-fulcrum.x, -fulcrum.y, 0); // center cam on fulcrum
 
@@ -135,19 +124,8 @@ void drawLine()
 	}
 }
 
-void drawforceDirection()
-{
-	glPushMatrix();
-	glutWireCone(5, 5, 50, 50);
-	glTranslated(point[0].x, point[0].y, 0);
-	glRotated(45, 0,1, 0);
-	glPopMatrix();
-}
-
 void drawFulcrum()
 {
-	GameObject fulcrum = getFulcrum();
-
 	glPushMatrix();
 	glTranslated(fulcrum.x, fulcrum.y, -1);
 	glColor3d(fulcrum.r, fulcrum.g, fulcrum.b);
@@ -169,8 +147,6 @@ void drawLoad()
 
 void keyboardFunc(unsigned char key, int xL, int xR)
 {
-	GameObject fulcrum = getFulcrum();
-
 	// fulcrum left/right
 	if (key == 'a')
 	{
@@ -270,29 +246,21 @@ void renderScene(void)
 	glLoadIdentity();
 	glOrtho(-50, 50, -50, 50, -50, 50);
 	glMatrixMode(GL_MODELVIEW);
-
 	glLoadIdentity();
+
 	if(physicsMode)
 		forceRotate();
-
 	drawLoad();
 	drawLine();
 	drawFulcrum();
-	// drawforceDirection();
 
-	//flushes the buffer
 	glFlush();
-	//swaps between the front buffer and the back buffer
 	glutSwapBuffers();
-	//updates the display
 	glutPostRedisplay();
 }
 
 int main(int argc, char **argv)
 {
-	//init randomizer
-	srand(static_cast <unsigned> (time(0)));
-
 	glutInit(&argc, argv);
 	glutInitDisplayMode(GLUT_DEPTH | GLUT_DOUBLE | GLUT_RGBA);
 	glutInitWindowPosition(100, 100);
@@ -309,9 +277,6 @@ int main(int argc, char **argv)
 
 	cout <<"force mass = "<< point[0].mass << endl;
 	cout << "load mass = " << point[1].mass << endl;
-	// cout << "fulcrum pos = " << fulcrum.x << endl;
-	// cout << "L = " << point[0].x - fulcrum.x << endl;
-	// cout << "X = " << fulcrum.x- point[1].x << endl;
 
 	glutMainLoop();
 

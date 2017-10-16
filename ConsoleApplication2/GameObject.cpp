@@ -9,3 +9,5 @@ GameObject::GameObject(float x, float y, float z, float r, float g, float b, int
   this->b = b;
   this->type = type;
 }
+
+GameObject::GameObject() {}
