@@ -43,7 +43,7 @@ double getStep()
 	return wut;
 }
 
-void lineFunction(double startX, double startY, double endX, double endY)
+void addLine(double startX, double startY, double endX, double endY)
 {
 	GameObject go = GameObject(startX, startY, 0, 1, 0, 0, GameObject::TYPE_LINE);
 	go.lx = endX;
@@ -52,7 +52,7 @@ void lineFunction(double startX, double startY, double endX, double endY)
 	gameObjects.push_back(go);
 }
 
-void circleFulcrum(double x, double y)
+void addFulcrum(double x, double y)
 {
 	for (size_t i = 0; i < fulcrumCount; i++)
 	{
@@ -68,11 +68,24 @@ void circleFulcrum(double x, double y)
 	cout << "fulcrum x = " << x << " fulcrum y = " << y << endl;
 }
 
+void addCircle(double m, double x, double y, double z, double r, double b, double g)
+{
+		Point pt;
+		pt.mass = m;
+		pt.x = x;
+		pt.y = y;
+		pt.z = z;
+		pt.r = r;
+		pt.g = g;
+		pt.b = b;
+
+		point.push_back(pt);
+}
+
 void forceRotate()
 {
 	glRotated(angle, 0, 0, 1);
 	glTranslated(-fulcrum[0].x, -fulcrum[0].y, 0); // center cam on fulcrum
-
 
 	//gluproject reference
 	//http://stackoverflow.com/questions/11891481/gluproject-setup-in-opengl-vc-beginner
@@ -110,20 +123,6 @@ void forceRotate()
 	//cout << "angular velocity = " << angularVel << endl;
 	//cout << "angle = " << angle << endl;
  }
-
-void circleLoad(double m, double x, double y, double z, double r, double b, double g)
-{
-		Point pt;
-		pt.mass = m;
-		pt.x = x;
-		pt.y = y;
-		pt.z = z;
-		pt.r = r;
-		pt.g = g;
-		pt.b = b;
-
-		point.push_back(pt);
-}
 
 void drawLine()
 {
@@ -307,17 +306,16 @@ int main(int argc, char **argv)
 	glutReshapeFunc(changeSize);
 	glutKeyboardFunc(keyboardFunc);
 
-	circleFulcrum(0.0, 0.0);
-	circleLoad(500.0, 20.0, 0.0, -1.0, 1, 1, 0);
-	circleLoad(10.0, -20.0, 0.0, -1.0, 0, 0, 1);
+	addFulcrum(0.0, 0.0);
+	addCircle(500.0, 20.0, 0.0, -1.0, 1, 1, 0);
+	addCircle(10.0, -20.0, 0.0, -1.0, 0, 0, 1);
+	addLine(20.0, 0.0, -20.0, 0.0);
 
 	cout <<"force mass = "<< point[0].mass << endl;
 	cout << "load mass = " << point[1].mass << endl;
 	cout << "fulcrum pos = " << fulcrum[0].x << endl;
 	cout << "L = " << point[0].x - fulcrum[0].x << endl;
 	cout << "X = " << fulcrum[0].x- point[1].x << endl;
-
-	lineFunction(20.0, 0.0, -20.0, 0.0);
 
 	glutMainLoop();
 
